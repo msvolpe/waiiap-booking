@@ -1,0 +1,83 @@
+{
+  "name": "create-appointment",
+  "description": "Crea una nueva cita en el sistema. Valida el tenant, crea o actualiza el cliente, verifica el servicio y profesional, valida disponibilidad del horario (ausencias, conflictos, horarios laborales), crea la cita, genera código de confirmación, y crea notificaciones de confirmación y recordatorio automático. Retorna información completa y formateada de la cita creada.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "client_name": {
+        "type": "string",
+        "description": "Nombre completo del cliente. Siempre requerido."
+      },
+      "client_phone": {
+        "type": "string",
+        "description": "Teléfono del cliente. Se usa para buscar si el cliente ya existe. Siempre requerido."
+      },
+      "client_email": {
+        "type": "string",
+        "format": "email",
+        "description": "Email del cliente. Opcional."
+      },
+      "service_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador del servicio a agendar. Siempre requerido."
+      },
+      "professional_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador del profesional. Si no se especifica, se asigna automáticamente el primer profesional disponible que ofrezca el servicio."
+      },
+      "start_time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Fecha y hora de inicio de la cita en formato ISO8601 (ej: '2025-01-25T14:00:00Z'). Siempre requerido."
+      },
+      "notes": {
+        "type": "string",
+        "description": "Notas adicionales sobre la cita."
+      }
+    },
+    "required": ["tenant_id", "client_name", "client_phone", "service_id", "start_time"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario quiere agendar una cita: 'Quiero agendar una cita', 'Necesito una cita', 'Quiero reservar'",
+      "Usuario ha seleccionado un servicio, profesional y horario disponible",
+      "Necesitas crear una cita después de que el usuario eligió un slot de get-available-slots",
+      "Usuario confirma que quiere agendar en un horario específico"
+    ],
+    "response_fields": {
+      "success": "Indica si la creación fue exitosa",
+      "appointment": "Información completa de la cita creada (id, confirmation_code, status, datetime, client, professional, service, clinic)",
+      "message": "Mensaje conversacional completo de confirmación listo para mostrar al usuario",
+      "next_steps": "Lista de próximos pasos para el usuario"
+    },
+    "tips": [
+      "Siempre incluye tenant_id, client_name, client_phone, service_id y start_time (todos obligatorios).",
+      "Si el cliente ya existe (por teléfono), se actualiza su información automáticamente.",
+      "Si no se especifica professional_id, se asigna automáticamente el primer profesional disponible.",
+      "La función valida automáticamente disponibilidad, horarios laborales y ausencias.",
+      "Se crean automáticamente notificaciones de confirmación y recordatorio.",
+      "Se genera un código de confirmación único que se incluye en las notas.",
+      "Usa el campo message de la respuesta para mostrar la confirmación al usuario.",
+      "Antes de crear la cita, verifica disponibilidad con get-available-slots.",
+      "El formato de start_time debe ser ISO8601 y debe ser una fecha futura."
+    ],
+    "error_codes": {
+      "MISSING_REQUIRED_FIELDS": "Faltan campos requeridos",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "Service not found or inactive": "El servicio no existe o está inactivo",
+      "No professionals available for this service": "No hay profesionales disponibles para este servicio",
+      "Professional is not available at this time": "El profesional no está disponible en este horario",
+      "Time slot is not available": "El slot no está disponible (hay conflicto con otra cita)",
+      "Professional does not work on this day": "El profesional no trabaja en este día"
+    }
+  }
+}
+
