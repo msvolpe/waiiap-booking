@@ -1,0 +1,70 @@
+{
+  "name": "get-appointment-details",
+  "description": "Obtiene información detallada y completa de una cita específica. Incluye datos del cliente, profesional, servicio, fechas formateadas, estado de notificaciones, historial de reprogramaciones, seguimientos relacionados, y opcionalmente el historial del cliente y el horario del profesional. Útil para responder preguntas del usuario sobre su cita o verificar detalles antes de realizar operaciones como cancelar o reprogramar.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "appointment_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único de la cita. Siempre requerido."
+      },
+      "include_client_history": {
+        "type": "boolean",
+        "description": "Si es true, incluye el historial de las últimas 10 citas del cliente. Útil cuando el usuario pregunta sobre su historial.",
+        "default": false
+      },
+      "include_professional_schedule": {
+        "type": "boolean",
+        "description": "Si es true, incluye el horario laboral del profesional. Útil para mostrar disponibilidad.",
+        "default": false
+      }
+    },
+    "required": ["tenant_id", "appointment_id"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario pregunta: '¿Cuándo es mi cita?', '¿Qué día tengo cita?', '¿A qué hora es mi cita?'",
+      "Usuario pregunta: '¿Quién es mi doctor?', '¿Con quién tengo cita?'",
+      "Usuario pregunta: '¿Qué servicio tengo agendado?'",
+      "Necesitas verificar detalles antes de cancelar o reprogramar una cita",
+      "Usuario pregunta: '¿Me confirmaron la cita?', '¿Enviaron el recordatorio?'",
+      "Necesitas mostrar información completa de una cita al usuario",
+      "Usuario pregunta sobre el historial de sus citas (usar con include_client_history: true)"
+    ],
+    "response_fields": {
+      "appointment": "Información completa de la cita (id, status, datetime, time_until, client, professional, service, notes, cancellation, rescheduling, notifications, followups, metadata)",
+      "datetime": "Fechas en formato ISO y formateadas conversacionalmente (formatted.date, formatted.time, formatted.full, day_of_week, time_period)",
+      "time_until": "Información sobre cuánto tiempo falta (hours, days, minutes, message, is_past, is_today)",
+      "rescheduling": "Información de reprogramaciones (is_rescheduled, history con todas las citas relacionadas)",
+      "notifications": "Estado de todas las notificaciones relacionadas (confirmation, reminder, cancellation, rescheduled)",
+      "client_history": "Opcional: Historial de las últimas 10 citas del cliente",
+      "professional_schedule": "Opcional: Horario laboral del profesional",
+      "summary": "Resumen conversacional de la cita listo para mostrar al usuario"
+    },
+    "tips": [
+      "Siempre incluye tenant_id y appointment_id (ambos obligatorios).",
+      "La respuesta incluye toda la información necesaria para responder preguntas del usuario sobre su cita.",
+      "Usa los campos formatted para mostrar fechas de manera conversacional. El campo time_until.message es especialmente útil ('En 2 días', 'Mañana', 'Hoy').",
+      "Si la cita fue reprogramada, el campo rescheduling.history contiene todas las citas relacionadas en orden cronológico.",
+      "El campo notifications te permite verificar si se enviaron confirmaciones, recordatorios, etc.",
+      "Usa include_client_history: true cuando el usuario pregunte sobre su historial de citas.",
+      "Usa include_professional_schedule: true cuando necesites mostrar el horario de atención del profesional.",
+      "El campo summary está diseñado para ser usado directamente en respuestas al usuario.",
+      "Antes de cancelar o reprogramar, usa esta función para verificar detalles y estado actual."
+    ],
+    "error_codes": {
+      "MISSING_REQUIRED_FIELDS": "Faltan campos requeridos (tenant_id o appointment_id)",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "APPOINTMENT_NOT_FOUND": "La cita no existe o no pertenece al tenant",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    }
+  }
+}
+
