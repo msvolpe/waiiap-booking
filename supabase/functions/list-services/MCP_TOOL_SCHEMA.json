@@ -1,0 +1,61 @@
+{
+  "name": "list-services",
+  "description": "Lista los servicios disponibles de un tenant (clínica/negocio). Permite buscar servicios por nombre, filtrar por estado activo/inactivo, e incluir información sobre los profesionales que ofrecen cada servicio. Útil para mostrar al usuario qué servicios están disponibles antes de agendar una cita.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "service_name": {
+        "type": "string",
+        "description": "Búsqueda parcial por nombre del servicio (case-insensitive). Ejemplo: 'Consulta', 'Limpieza', 'Revisión'. Si no se proporciona, retorna todos los servicios."
+      },
+      "is_active": {
+        "type": "boolean",
+        "description": "Filtrar por servicios activos (true) o inactivos (false). Por defecto solo muestra servicios activos.",
+        "default": true
+      },
+      "include_professionals": {
+        "type": "boolean",
+        "description": "Si es true, incluye la lista de profesionales que ofrecen cada servicio. Útil cuando el usuario pregunta '¿Quién ofrece este servicio?' o necesitas mostrar opciones completas.",
+        "default": false
+      },
+      "include_pricing": {
+        "type": "boolean",
+        "description": "Si es true, incluye información detallada de precios, incluyendo precios personalizados por profesional cuando include_professionals también es true.",
+        "default": true
+      }
+    },
+    "required": ["tenant_id"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario pregunta: '¿Qué servicios tienen?', '¿Qué ofrecen?', '¿Qué servicios están disponibles?'",
+      "Usuario busca un servicio específico por nombre",
+      "Necesitas mostrar opciones de servicios antes de crear una cita",
+      "Usuario pregunta por precios o duraciones de servicios",
+      "Necesitas verificar si un servicio existe antes de proceder con una reserva",
+      "Usuario pregunta '¿Quién ofrece este servicio?' (usar con include_professionals: true)"
+    ],
+    "response_fields": {
+      "services": "Array de servicios con id, name, description, duration_minutes, price, formatted_price, summary, requires_approval",
+      "summary": "Campo útil para mostrar directamente al usuario (ej: 'Consulta General - 30 min - €50,00')",
+      "formatted_price": "Precio formateado listo para mostrar ('€50,00', 'Gratis', 'Consultar precio')",
+      "professionals": "Solo presente si include_professionals es true. Lista de profesionales que ofrecen el servicio",
+      "message": "Mensaje contextual sobre los resultados para ayudar a formular la respuesta al usuario",
+      "count": "Número total de servicios encontrados"
+    },
+    "tips": [
+      "Siempre incluye tenant_id (obligatorio). Si el usuario no lo proporciona, solicítalo o infiérelo del contexto.",
+      "El parámetro service_name hace búsqueda parcial, así que 'consulta' encontrará 'Consulta General', 'Consulta de Seguimiento', etc.",
+      "Usa include_professionals: true cuando el usuario pregunte quién ofrece un servicio.",
+      "Usa el campo formatted_price para mostrar precios al usuario, ya que maneja casos especiales.",
+      "El campo summary está diseñado para ser usado directamente en respuestas al usuario.",
+      "Si count es 0, informa al usuario amablemente y sugiere alternativas."
+    ]
+  }
+}
+

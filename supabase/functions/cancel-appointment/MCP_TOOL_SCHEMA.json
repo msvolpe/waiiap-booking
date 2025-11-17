@@ -1,0 +1,76 @@
+{
+  "name": "cancel-appointment",
+  "description": "Cancela una cita existente. Actualiza el estado de la cita a 'cancelled', registra la razón de cancelación, actualiza las estadísticas del cliente, cancela notificaciones pendientes (recordatorios), y envía notificaciones de cancelación al cliente y/o profesional según corresponda. El slot queda disponible para nuevas reservas.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "appointment_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único de la cita a cancelar. Siempre requerido."
+      },
+      "cancellation_reason": {
+        "type": "string",
+        "description": "Razón específica de la cancelación. Si no se proporciona, se usa una razón por defecto según cancelled_by."
+      },
+      "cancelled_by": {
+        "type": "string",
+        "enum": ["client", "professional", "admin", "system"],
+        "description": "Quién cancela la cita. Valores: 'client' (default), 'professional', 'admin', 'system'.",
+        "default": "client"
+      },
+      "notify_client": {
+        "type": "boolean",
+        "description": "Si se debe notificar al cliente sobre la cancelación.",
+        "default": true
+      },
+      "notify_professional": {
+        "type": "boolean",
+        "description": "Si se debe notificar al profesional sobre la cancelación.",
+        "default": true
+      }
+    },
+    "required": ["tenant_id", "appointment_id"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario solicita cancelar su cita: 'Quiero cancelar mi cita', 'Necesito cancelar', 'No puedo asistir'",
+      "Profesional necesita cancelar por emergencia",
+      "Administración necesita cancelar una cita",
+      "Sistema detecta conflictos y necesita cancelar automáticamente",
+      "Se necesita liberar un slot para otra cita"
+    ],
+    "response_fields": {
+      "success": "Indica si la cancelación fue exitosa",
+      "appointment": "Información de la cita cancelada (id, status, cancelled_at, cancellation_reason, cancelled_by, original_appointment)",
+      "notifications": "Estado de las notificaciones enviadas (client_notified, professional_notified)",
+      "message": "Mensaje contextual sobre la cancelación para ayudar a formular la respuesta al usuario"
+    },
+    "tips": [
+      "Siempre incluye tenant_id y appointment_id (ambos obligatorios).",
+      "La función verifica automáticamente que la cita existe, no esté ya cancelada, y no esté completada.",
+      "Por defecto se notifica tanto al cliente como al profesional. Controla esto con notify_client y notify_professional.",
+      "Si no se proporciona cancellation_reason, se usa una razón por defecto según cancelled_by.",
+      "Una vez cancelada, el slot queda disponible y puede ser reservado nuevamente.",
+      "Usa el campo message de la respuesta para informar al usuario sobre la cancelación de manera conversacional.",
+      "Si la cita ya está cancelada, retorna error 409 con código 'ALREADY_CANCELLED'.",
+      "Si la cita está completada, retorna error 400 con código 'CANNOT_CANCEL_COMPLETED'.",
+      "Antes de cancelar, puedes usar list-client-appointments o get-appointment-details para obtener el appointment_id."
+    ],
+    "error_codes": {
+      "MISSING_REQUIRED_FIELDS": "Faltan campos requeridos (tenant_id o appointment_id)",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "APPOINTMENT_NOT_FOUND": "La cita no existe o no pertenece al tenant",
+      "ALREADY_CANCELLED": "La cita ya está cancelada",
+      "CANNOT_CANCEL_COMPLETED": "No se puede cancelar una cita completada",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    }
+  }
+}
+
