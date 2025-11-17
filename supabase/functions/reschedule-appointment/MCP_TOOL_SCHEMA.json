@@ -1,0 +1,86 @@
+{
+  "name": "reschedule-appointment",
+  "description": "Reprograma una cita existente a un nuevo horario. Valida la disponibilidad del nuevo horario, crea una nueva cita confirmada, actualiza la cita original marcándola como cancelada, cancela los recordatorios pendientes de la cita original, crea nuevos recordatorios para la nueva cita, y envía notificaciones de reprogramación al cliente y/o profesional según corresponda.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "appointment_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único de la cita a reprogramar. Siempre requerido."
+      },
+      "new_start_time": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Nueva fecha y hora de inicio de la cita en formato ISO8601 (ej: '2025-01-25T15:00:00Z'). Debe ser una fecha futura. Siempre requerido."
+      },
+      "reason": {
+        "type": "string",
+        "description": "Razón de la reprogramación. Si no se proporciona, se usa una razón por defecto."
+      },
+      "rescheduled_by": {
+        "type": "string",
+        "enum": ["client", "professional", "admin", "system"],
+        "description": "Quién reprograma la cita. Valores: 'client' (default), 'professional', 'admin', 'system'.",
+        "default": "client"
+      },
+      "notify_client": {
+        "type": "boolean",
+        "description": "Si se debe notificar al cliente sobre la reprogramación.",
+        "default": true
+      },
+      "notify_professional": {
+        "type": "boolean",
+        "description": "Si se debe notificar al profesional sobre la reprogramación.",
+        "default": true
+      }
+    },
+    "required": ["tenant_id", "appointment_id", "new_start_time"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario solicita cambiar la fecha/hora de su cita: 'Quiero cambiar mi cita', '¿Puedo reprogramar?', 'Necesito otro horario'",
+      "Profesional necesita reprogramar por emergencia",
+      "Administración necesita reprogramar una cita",
+      "Sistema detecta conflictos y necesita reprogramar automáticamente",
+      "Se necesita mover una cita a un horario más conveniente"
+    ],
+    "response_fields": {
+      "success": "Indica si la reprogramación fue exitosa",
+      "original_appointment": "Información de la cita original (id, status, original_date, original_time)",
+      "new_appointment": "Información de la nueva cita (id, status, start_time, end_time, formatted_date, formatted_time, service, professional, client)",
+      "notifications": "Estado de las notificaciones (client_notified, professional_notified, reminder_scheduled)",
+      "message": "Mensaje contextual sobre la reprogramación para ayudar a formular la respuesta al usuario"
+    },
+    "tips": [
+      "Siempre incluye tenant_id, appointment_id y new_start_time (todos obligatorios).",
+      "La función valida automáticamente que la cita existe, no esté cancelada/completada, y que el nuevo horario esté disponible.",
+      "La duración de la nueva cita se calcula automáticamente (personalizada del profesional > duración del servicio > duración original).",
+      "Se crea una nueva cita confirmada y la original se marca como cancelada con referencias cruzadas.",
+      "Se cancelan automáticamente los recordatorios de la cita original y se crea uno nuevo para la nueva cita.",
+      "Por defecto se notifica tanto al cliente como al profesional. Controla esto con notify_client y notify_professional.",
+      "Usa el campo message de la respuesta para informar al usuario sobre la reprogramación de manera conversacional.",
+      "Antes de reprogramar, puedes usar get-appointment-details para obtener información de la cita y get-available-slots para ver horarios disponibles.",
+      "El formato de new_start_time debe ser ISO8601 (ej: '2025-01-25T15:00:00Z') y debe ser una fecha futura."
+    ],
+    "error_codes": {
+      "MISSING_REQUIRED_FIELDS": "Faltan campos requeridos (tenant_id, appointment_id o new_start_time)",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "APPOINTMENT_NOT_FOUND": "La cita no existe o no pertenece al tenant",
+      "CANNOT_RESCHEDULE_CANCELLED": "No se puede reprogramar una cita cancelada",
+      "CANNOT_RESCHEDULE_COMPLETED": "No se puede reprogramar una cita completada",
+      "INVALID_FUTURE_TIME": "El nuevo horario no puede ser en el pasado",
+      "PROFESSIONAL_UNAVAILABLE": "El profesional no está disponible en el nuevo horario",
+      "SLOT_NOT_AVAILABLE": "El slot no está disponible (hay conflicto con otra cita)",
+      "OUTSIDE_BUSINESS_HOURS": "El nuevo horario está fuera del horario laboral",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    }
+  }
+}
+
