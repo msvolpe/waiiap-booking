@@ -1,0 +1,77 @@
+{
+  "name": "search-professionals",
+  "description": "Busca y filtra profesionales disponibles en un tenant. Permite buscar por especialidad, nombre, o servicio específico. Opcionalmente incluye la lista de servicios que ofrece cada profesional y sus horarios laborales. Útil para mostrar al usuario qué profesionales están disponibles antes de agendar una cita.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "specialty": {
+        "type": "string",
+        "description": "Búsqueda parcial por especialidad (case-insensitive). Ejemplo: 'Cardiología', 'Pediatría'."
+      },
+      "professional_name": {
+        "type": "string",
+        "description": "Búsqueda parcial por nombre (case-insensitive). Ejemplo: 'Carlos', 'Dr. Martinez'."
+      },
+      "service_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Buscar solo profesionales que ofrecen un servicio específico."
+      },
+      "include_services": {
+        "type": "boolean",
+        "description": "Si es true, incluye la lista de servicios que ofrece cada profesional. Útil para mostrar opciones completas.",
+        "default": true
+      },
+      "include_schedule": {
+        "type": "boolean",
+        "description": "Si es true, incluye los horarios laborales de cada profesional. Útil cuando el usuario pregunta sobre horarios de atención.",
+        "default": false
+      },
+      "only_available": {
+        "type": "boolean",
+        "description": "Si es true, solo muestra profesionales activos y disponibles. Si un profesional tiene ausencias activas, se marca como currently_unavailable pero no se excluye.",
+        "default": true
+      }
+    },
+    "required": ["tenant_id"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario pregunta: '¿Qué profesionales tienen?', '¿Qué doctores hay?', '¿Quién atiende?'",
+      "Usuario busca un profesional por especialidad: '¿Tienen cardiólogo?', '¿Hay pediatra?'",
+      "Usuario busca un profesional por nombre: '¿Está el Dr. García?', 'Busco a Carlos'",
+      "Usuario pregunta: '¿Quién ofrece [servicio]?'",
+      "Necesitas mostrar opciones de profesionales antes de crear una cita"
+    ],
+    "response_fields": {
+      "professionals": "Array de profesionales con información completa (id, name, specialty, bio, services, schedule, currently_unavailable, summary)",
+      "services": "Opcional: Lista de servicios que ofrece cada profesional con precios y duraciones",
+      "schedule": "Opcional: Horarios laborales formateados de manera conversacional",
+      "summary": "Resumen conversacional del profesional listo para mostrar al usuario",
+      "count": "Número total de profesionales encontrados",
+      "message": "Mensaje contextual sobre los resultados"
+    },
+    "tips": [
+      "Siempre incluye tenant_id (obligatorio).",
+      "Los parámetros specialty y professional_name hacen búsqueda parcial y case-insensitive.",
+      "Usa service_id cuando el usuario pregunta '¿Quién ofrece [servicio]?'",
+      "Por defecto incluye los servicios que ofrece cada profesional (include_services: true).",
+      "Usa include_schedule: true cuando el usuario pregunta sobre horarios de atención.",
+      "Por defecto solo muestra profesionales activos. Si tienen ausencias activas, se marcan como currently_unavailable.",
+      "El campo summary está diseñado para ser usado directamente en respuestas al usuario.",
+      "Si count es 0, informa al usuario amablemente y sugiere verificar la búsqueda."
+    ],
+    "error_codes": {
+      "MISSING_TENANT_ID": "Falta el campo tenant_id",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    }
+  }
+}
+

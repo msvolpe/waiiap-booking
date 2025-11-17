@@ -1,0 +1,84 @@
+{
+  "name": "get-available-slots",
+  "description": "Obtiene horarios disponibles (slots) para agendar una cita. Busca en un rango de fechas, considera horarios laborales, excluye citas existentes y ausencias de profesionales, y retorna slots formateados de manera conversacional. Útil para mostrar al usuario opciones de horarios disponibles antes de crear una cita.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "service_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador del servicio. Siempre requerido."
+      },
+      "professional_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador del profesional. Si no se especifica, busca en todos los profesionales que ofrecen el servicio."
+      },
+      "date_from": {
+        "type": "string",
+        "format": "date",
+        "description": "Fecha de inicio del rango en formato YYYY-MM-DD. Default: hoy."
+      },
+      "date_to": {
+        "type": "string",
+        "format": "date",
+        "description": "Fecha de fin del rango en formato YYYY-MM-DD. Default: +30 días desde hoy."
+      },
+      "preferred_time": {
+        "type": "string",
+        "enum": ["morning", "afternoon", "evening", "any"],
+        "description": "Filtro por período del día. Valores: 'morning' (6-12h), 'afternoon' (12-18h), 'evening' (18-24h), 'any' (default).",
+        "default": "any"
+      },
+      "max_results": {
+        "type": "integer",
+        "description": "Límite de slots a retornar. Default: 20.",
+        "default": 20
+      },
+      "prioritize": {
+        "type": "string",
+        "enum": ["earliest", "latest"],
+        "description": "Ordenar por fecha más cercana ('earliest', default) o lejana ('latest').",
+        "default": "earliest"
+      }
+    },
+    "required": ["tenant_id", "service_id"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario pregunta: '¿Qué horarios tienen disponibles?', '¿Cuándo puedo agendar?'",
+      "Usuario quiere ver opciones de horarios para un servicio específico",
+      "Necesitas mostrar horarios disponibles después de que el usuario seleccionó un servicio",
+      "Usuario pregunta: '¿Tienen horario mañana/tarde/noche?'",
+      "Necesitas verificar disponibilidad antes de crear una cita"
+    ],
+    "response_fields": {
+      "available_slots": "Array de slots disponibles con información completa (datetime, date, time, formatted, professional_name, duration_minutes, price, day_of_week, time_period)",
+      "formatted": "Campo útil para mostrar directamente al usuario (ej: 'sábado 25 de enero a las 10:00')",
+      "count": "Número total de slots encontrados",
+      "search_criteria": "Criterios de búsqueda utilizados"
+    },
+    "tips": [
+      "Siempre incluye tenant_id y service_id (ambos obligatorios).",
+      "La función busca slots considerando horarios laborales, citas existentes, ausencias y buffer entre citas.",
+      "Usa preferred_time para filtrar por mañana/tarde/noche según la preferencia del usuario.",
+      "Los slots vienen formateados de manera conversacional, listos para mostrar. Usa el campo formatted.",
+      "Si no se especifica professional_id, puede retornar slots de diferentes profesionales.",
+      "Si count es 0, informa al usuario amablemente y sugiere otro rango de fechas o servicio.",
+      "Por defecto ordena por fecha más cercana, mostrando primero los horarios más próximos.",
+      "El formato de date_from/date_to debe ser YYYY-MM-DD (ej: '2025-01-20')."
+    ],
+    "error_codes": {
+      "MISSING_REQUIRED_FIELDS": "Faltan campos requeridos (tenant_id o service_id)",
+      "TENANT_NOT_FOUND": "El tenant no existe o está inactivo",
+      "Service not found or inactive": "El servicio no existe o está inactivo",
+      "No professionals available for this service": "No hay profesionales disponibles para este servicio"
+    }
+  }
+}
+
