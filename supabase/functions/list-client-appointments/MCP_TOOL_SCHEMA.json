@@ -1,0 +1,108 @@
+{
+  "name": "list-client-appointments",
+  "description": "Lista todas las citas de un cliente específico. Permite filtrar por estado, fechas (pasadas/futuras), y ordenar los resultados. Incluye información completa de cada cita: fechas formateadas, profesional, servicio, estado, y tiempo hasta la cita. Útil para responder preguntas del usuario sobre sus citas, mostrar su historial, o encontrar una cita específica antes de realizar operaciones como cancelar o reprogramar.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "client_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del cliente. Preferido si está disponible. Alternativa a client_phone/client_email."
+      },
+      "client_phone": {
+        "type": "string",
+        "description": "Teléfono del cliente. Alternativa a client_id. Al menos uno de client_id, client_phone, o client_email es requerido."
+      },
+      "client_email": {
+        "type": "string",
+        "format": "email",
+        "description": "Email del cliente. Alternativa a client_id. Al menos uno de client_id, client_phone, o client_email es requerido."
+      },
+      "status": {
+        "type": "string",
+        "enum": ["confirmed", "pending", "cancelled", "completed"],
+        "description": "Filtrar por estado específico. Si no se especifica, retorna todos los estados (a menos que include_cancelled sea false)."
+      },
+      "only_future": {
+        "type": "boolean",
+        "description": "Si es true, solo retorna citas futuras (start_time >= ahora). No puede ser true al mismo tiempo que only_past.",
+        "default": false
+      },
+      "only_past": {
+        "type": "boolean",
+        "description": "Si es true, solo retorna citas pasadas (start_time < ahora). No puede ser true al mismo tiempo que only_future.",
+        "default": false
+      },
+      "include_cancelled": {
+        "type": "boolean",
+        "description": "Si es false, excluye las citas canceladas del resultado.",
+        "default": true
+      },
+      "limit": {
+        "type": "number",
+        "description": "Límite máximo de resultados a retornar.",
+        "default": 50,
+        "minimum": 1,
+        "maximum": 100
+      },
+      "order_by": {
+        "type": "string",
+        "enum": ["start_time_asc", "start_time_desc"],
+        "description": "Orden de los resultados. 'start_time_asc' = más antiguas primero, 'start_time_desc' = más recientes primero.",
+        "default": "start_time_desc"
+      }
+    },
+    "required": ["tenant_id"],
+    "anyOf": [
+      { "required": ["client_id"] },
+      { "required": ["client_phone"] },
+      { "required": ["client_email"] }
+    ]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Usuario pregunta: '¿Qué citas tengo?', '¿Cuándo tengo mi próxima cita?', 'Muéstrame mis citas'",
+      "Usuario pregunta: '¿Tengo alguna cita hoy?', '¿Tengo citas esta semana?'",
+      "Necesitas encontrar una cita específica del cliente antes de cancelar o reprogramar",
+      "Usuario pregunta sobre su historial de citas",
+      "Necesitas verificar si un cliente tiene citas futuras o pasadas",
+      "Usuario pregunta: '¿Cuántas citas tengo?'"
+    ],
+    "response_fields": {
+      "tenant": "Información del tenant (id, business_name)",
+      "client": "Información del cliente (id, name, phone, email)",
+      "appointments": "Array de citas con información completa (id, status, datetime, time_until, client, professional, service, notes, cancellation_reason, metadata, summary)",
+      "count": "Número total de citas retornadas",
+      "summary": "Resumen estadístico (total, future, past, today, by_status)",
+      "filters_applied": "Filtros que se aplicaron en la consulta",
+      "message": "Mensaje resumen listo para mostrar al usuario"
+    },
+    "tips": [
+      "Puedes usar client_id, client_phone, o client_email para identificar al cliente. Si tienes el ID, úsalo directamente.",
+      "Para 'próxima cita': usa only_future: true, limit: 1, order_by: 'start_time_asc'",
+      "Para 'citas de hoy': usa only_future: true y luego filtra por is_today: true en los resultados",
+      "Para 'historial': usa only_past: true, include_cancelled: false",
+      "Para 'citas confirmadas': usa status: 'confirmed'",
+      "Usa los campos formatted para mostrar fechas de manera conversacional. El campo time_until.message es especialmente útil ('En 2 días', 'Mañana', 'Hoy', 'Ya pasó').",
+      "El campo summary te permite responder preguntas como '¿Cuántas citas tengo?' o '¿Cuántas citas futuras tengo?'",
+      "El campo message está diseñado para ser usado directamente en respuestas al usuario.",
+      "Por defecto, las citas se ordenan por fecha descendente (más recientes primero). Para la próxima cita, usa order_by: 'start_time_asc' con limit: 1.",
+      "Antes de cancelar o reprogramar, usa esta función para encontrar la cita específica y obtener su ID."
+    ],
+    "error_codes": {
+      "MISSING_TENANT_ID": "Falta el tenant_id requerido",
+      "MISSING_CLIENT_IDENTIFIER": "Falta al menos un identificador de cliente (client_id, client_phone, o client_email)",
+      "INVALID_FILTERS": "only_future y only_past no pueden ser ambos true",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "CLIENT_NOT_FOUND": "El cliente no existe o no pertenece al tenant",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    }
+  }
+}
+
