@@ -6,6 +6,10 @@
 2. ✅ **search-professionals** - Buscar profesionales disponibles
 3. ✅ **get-available-slots** - Obtener horarios disponibles
 4. ✅ **list-services** - Listar servicios disponibles
+5. ✅ **cancel-appointment** - Cancelar una cita
+6. ✅ **reschedule-appointment** - Reprogramar una cita
+7. ✅ **get-appointment-details** - Obtener detalles de una cita
+8. ✅ **list-professional-appointments** - Listar citas de un profesional
 
 ---
 
@@ -110,21 +114,25 @@
 
 ---
 
-#### 5. **list-professional-appointments**
+#### 5. ✅ **list-professional-appointments** - IMPLEMENTADA
 **Descripción:** Lista las citas de un profesional en un rango de fechas
 **Parámetros:**
 - `tenant_id` (requerido)
 - `professional_id` (requerido)
 - `date_from` (opcional, default: hoy)
 - `date_to` (opcional, default: +30 días)
-- `status` (opcional: 'all', 'confirmed', 'pending', 'cancelled')
+- `status` (opcional: 'all', 'confirmed', 'pending', 'cancelled', 'completed')
+- `include_cancelled` (opcional, default: true)
+- `limit` (opcional, default: 100)
+- `order_by` (opcional: 'start_time_asc', 'start_time_desc')
 
 **Funcionalidades:**
 - Obtener agenda del profesional
 - Filtrar por estado y rango de fechas
 - Incluir información de clientes
 - Formatear para visualización de calendario
-- Agrupar por día
+- Agrupar por día (campo `grouped_by_day`)
+- Incluir información completa de cada cita
 
 **Casos de uso:**
 - Profesional consulta su agenda
@@ -415,9 +423,9 @@
    - ⏳ "Muéstrame mi historial de citas" → `list-client-appointments` con status='all'
 
 3. **Gestión de agenda profesional:**
-   - ⏳ Profesional consulta su agenda → `list-professional-appointments`
-   - ⏳ Ver citas del día → `list-professional-appointments` con date_from/date_to del día
-   - ⏳ Ver próximas citas → `list-professional-appointments` con date_from=hoy
+   - ✅ Profesional consulta su agenda → `list-professional-appointments`
+   - ✅ Ver citas del día → `list-professional-appointments` con date_from/date_to del día
+   - ✅ Ver próximas citas → `list-professional-appointments` con date_from=hoy
 
 ### 🔄 Reprogramación y Cancelación
 
@@ -508,7 +516,7 @@
 ### Fase 2 - Importantes
 5. `search-clients`
 6. `create-unavailability`
-7. `list-professional-appointments`
+7. ✅ `list-professional-appointments` - COMPLETADA
 
 ### Fase 3 - Útiles
 8. `update-client`
@@ -528,7 +536,7 @@
 
 ## Resumen
 
-**Funciones implementadas:** 7 ✅
+**Funciones implementadas:** 8 ✅
 - create-appointment ✅
 - search-professionals ✅
 - get-available-slots ✅
@@ -536,8 +544,9 @@
 - cancel-appointment ✅
 - reschedule-appointment ✅
 - get-appointment-details ✅
+- list-professional-appointments ✅
 
-**Funciones pendientes:** 12
+**Funciones pendientes:** 11
 **Total funciones necesarias:** 19
 
 **Documentación completa:** Todas las funciones implementadas tienen documentación completa (TEST_CURL.md, TOOL_DESCRIPTION.md, MCP_TOOL_SCHEMA.json)
@@ -545,7 +554,7 @@
 **Casos de uso cubiertos actualmente:** ~50%
 **Casos de uso cubiertos con todas las funciones:** ~95%
 
-Con las 7 funciones actuales + las 12 pendientes, tendrás un sistema completo de gestión de citas que cubre:
+Con las 8 funciones actuales + las 11 pendientes, tendrás un sistema completo de gestión de citas que cubre:
 - ✅ Reserva de citas
 - ✅ Cancelación y reprogramación
 - ✅ Consulta de citas

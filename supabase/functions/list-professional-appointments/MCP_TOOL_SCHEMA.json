@@ -1,0 +1,98 @@
+{
+  "name": "list-professional-appointments",
+  "description": "Lista las citas de un profesional en un rango de fechas específico. Permite filtrar por estado y ordenar los resultados. Incluye información completa de cada cita: fechas formateadas, cliente, servicio, estado, y tiempo hasta la cita. Agrupa las citas por día para facilitar la visualización de calendario. Útil para que profesionales consulten su agenda, verificar disponibilidad antes de reprogramar, o generar vistas de calendario.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "tenant_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del tenant/clínica. Siempre requerido."
+      },
+      "professional_id": {
+        "type": "string",
+        "format": "uuid",
+        "description": "Identificador único del profesional. Siempre requerido."
+      },
+      "date_from": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Fecha de inicio del rango. Si no se especifica, usa la fecha de hoy. Formato: ISO 8601 (ej: '2025-01-20T00:00:00Z')."
+      },
+      "date_to": {
+        "type": "string",
+        "format": "date-time",
+        "description": "Fecha de fin del rango. Si no se especifica, usa 30 días desde hoy. Formato: ISO 8601 (ej: '2025-01-20T23:59:59Z')."
+      },
+      "status": {
+        "type": "string",
+        "enum": ["all", "confirmed", "pending", "cancelled", "completed"],
+        "description": "Filtrar por estado específico. Si no se especifica o es 'all', retorna todos los estados (a menos que include_cancelled sea false)."
+      },
+      "include_cancelled": {
+        "type": "boolean",
+        "description": "Si es false, excluye las citas canceladas del resultado.",
+        "default": true
+      },
+      "limit": {
+        "type": "number",
+        "description": "Límite máximo de resultados a retornar.",
+        "default": 100,
+        "minimum": 1,
+        "maximum": 500
+      },
+      "order_by": {
+        "type": "string",
+        "enum": ["start_time_asc", "start_time_desc"],
+        "description": "Orden de los resultados. 'start_time_asc' = más antiguas primero (útil para calendario), 'start_time_desc' = más recientes primero.",
+        "default": "start_time_asc"
+      }
+    },
+    "required": ["tenant_id", "professional_id"]
+  },
+  "usage_guidelines": {
+    "when_to_use": [
+      "Profesional pregunta: '¿Qué citas tengo?', 'Muéstrame mi agenda'",
+      "Profesional pregunta: '¿Tengo citas hoy?', '¿Qué citas tengo esta semana?'",
+      "Necesitas verificar la disponibilidad del profesional antes de reprogramar una cita",
+      "Necesitas generar una vista de calendario para el profesional",
+      "Profesional pregunta: '¿Cuántas citas tengo en [período]?'",
+      "Necesitas verificar conflictos de horario para un profesional"
+    ],
+    "response_fields": {
+      "tenant": "Información del tenant (id, business_name)",
+      "professional": "Información del profesional (id, name, specialty, email, phone)",
+      "date_range": "Rango de fechas consultado (from, to en ISO y formatted)",
+      "appointments": "Array de citas con información completa (id, status, datetime, time_until, client, professional, service, notes, cancellation_reason, metadata, summary)",
+      "grouped_by_day": "Objeto que agrupa las citas por día (clave: YYYY-MM-DD, valor: array de citas ordenadas por hora). Útil para visualización de calendario.",
+      "count": "Número total de citas retornadas",
+      "summary": "Resumen estadístico (total, future, past, today, by_status)",
+      "filters_applied": "Filtros que se aplicaron en la consulta",
+      "message": "Mensaje resumen listo para mostrar al usuario"
+    },
+    "tips": [
+      "Por defecto, si no se especifican date_from y date_to, retorna las citas desde hoy hasta 30 días en el futuro.",
+      "El campo grouped_by_day es especialmente útil para generar vistas de calendario. Las citas dentro de cada día están ordenadas por hora (ascendente).",
+      "Para 'citas de hoy': usa date_from y date_to del día actual",
+      "Para 'citas de esta semana': usa date_from = inicio de semana, date_to = fin de semana",
+      "Para 'citas confirmadas': usa status: 'confirmed'",
+      "Para 'agenda sin canceladas': usa include_cancelled: false",
+      "Usa los campos formatted para mostrar fechas de manera conversacional. El campo time_until.message es especialmente útil ('En 2 días', 'Mañana', 'Hoy', 'Ya pasó').",
+      "El campo summary te permite responder preguntas como '¿Cuántas citas tiene el profesional?' o '¿Cuántas citas confirmadas tiene?'",
+      "El campo message está diseñado para ser usado directamente en respuestas al usuario.",
+      "Por defecto, las citas se ordenan por fecha ascendente (más antiguas primero), lo cual es útil para visualización de calendario.",
+      "Antes de reprogramar una cita, usa esta función para verificar disponibilidad del profesional en el nuevo horario."
+    ],
+    "error_codes": {
+      "MISSING_TENANT_ID": "Falta el tenant_id requerido",
+      "MISSING_PROFESSIONAL_ID": "Falta el professional_id requerido",
+      "INVALID_DATE_RANGE": "date_from debe ser menor o igual a date_to",
+      "TENANT_NOT_FOUND": "El tenant no existe",
+      "TENANT_INACTIVE": "El tenant está inactivo",
+      "PROFESSIONAL_NOT_FOUND": "El profesional no existe o no pertenece al tenant",
+      "PROFESSIONAL_INACTIVE": "El profesional está inactivo",
+      "INTERNAL_ERROR": "Error interno del servidor"
+    }
+  }
+}
+
